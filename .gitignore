@@ -148,3 +148,6 @@ Thumbs.db
 # Project specific
 dist/
 *.tgz
+
+# Development scripts output (keep scripts themselves)
+scripts/*.log

@@ -1,0 +1,58 @@
+{
+  "name": "check-nc-licenses",
+  "version": "0.2.0",
+  "description": "CLI tool to scan Node.js projects for non-commercial (NC) licenses in dependencies",
+  "bin": { "check-nc-licenses": "dist/index.js" },
+  "scripts": { 
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:patterns": "node scripts/test-runner.js",
+    "test:advanced": "node scripts/advanced-test.js",
+    "test:all": "npm run test:patterns && npm run test:advanced",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist/src/**/*",
+    "dist/filters/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": [
+    "license",
+    "checker",
+    "non-commercial",
+    "nc",
+    "cli",
+    "dependencies",
+    "audit",
+    "compliance"
+  ],
+    "author": {
+    "name": "Daisuke Kurokawa",
+    "url": "https://github.com/dkurokawa"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dkurokawa/check-nc-licenses.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dkurokawa/check-nc-licenses/issues"
+  },
+  "homepage": "https://github.com/dkurokawa/check-nc-licenses#readme",
+  "devDependencies": { 
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
+    "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "@vitest/ui": "^1.0.0"
+  },
+  "type": "module"
+}
