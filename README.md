@@ -1,6 +1,11 @@
 # check-nc-licenses
 
-🔍 A CLI tool to scan your Node.js project for non-commercial (NC) licenses in dependencies.
+🔍 **Lightweight and fast** CLI tool to scan your Node.js project for non-commercial (NC) licenses in dependencies.
+
+✨ **Zero configuration** - Works out of the box  
+⚡ **Lightning fast** - Specialized for NC license detection  
+🎯 **Purpose-built** - Focused on commercial project compliance  
+🔧 **Easy integration** - Automatic build pipeline integration  
 
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -8,27 +13,72 @@
 
 ## Installation
 
+**Global installation** (recommended):
 ```bash
 npm install -g check-nc-licenses
 ```
 
-Or use without installing:
-
+**Or use instantly without installing**:
 ```bash
 npx check-nc-licenses
 ```
+
+**That's it!** No configuration files needed. 🚀
 
 ## Usage
 
 ### Basic Usage
 
-Scan your project's `node_modules` for non-commercial licenses:
+**One command. That's all.** Scan your project's `node_modules` for non-commercial licenses:
 
 ```bash
 check-nc-licenses
 ```
 
-### Options
+✅ **Zero setup required** - Works immediately on any Node.js project  
+⚡ **Instant results** - Fast scanning of all dependencies  
+🎯 **Smart detection** - Finds NC licenses others miss  
+
+### Automatic Integration
+
+**Set it and forget it.** Add to your `package.json` to run automatically:
+
+```json
+{
+  "scripts": {
+    "prebuild": "check-nc-licenses",    // Run before build
+    "pretest": "check-nc-licenses",     // Run before tests
+    "postinstall": "check-nc-licenses"  // Run after npm install
+  }
+}
+```
+
+**For published packages, use the installed command:**
+```json
+{
+  "scripts": {
+    "prebuild": "check-nc-licenses"
+  }
+}
+```
+
+**For development/local use:**
+```json
+{
+  "scripts": {
+    "prebuild": "npx check-nc-licenses"
+  }
+}
+```
+
+Now the tool runs automatically:
+```bash
+npm run build  # ✅ Checks licenses first, then builds
+npm test       # ✅ Checks licenses first, then tests  
+npm install    # ✅ Checks licenses after installing dependencies
+```
+
+### Manual Usage
 
 ```bash
 # Use specific filter
@@ -70,12 +120,14 @@ $ check-nc-licenses
 
 ## Why Use This Tool?
 
-Non-commercial licenses can restrict how you use, distribute, or monetize your software. This tool helps you:
+Non-commercial licenses can restrict how you use, distribute, or monetize your software. This **lightweight and focused** tool helps you:
 
 - **Ensure compliance** with license requirements
-- **Avoid legal issues** in commercial projects
+- **Avoid legal issues** in commercial projects  
 - **Audit dependencies** before releases
-- **Integrate into CI/CD** pipelines
+- **Integrate into CI/CD** pipelines **effortlessly**
+- **Save time** with instant, accurate detection
+- **Stay lightweight** - minimal dependencies, maximum performance
 
 ## Integration
 

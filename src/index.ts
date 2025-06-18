@@ -62,6 +62,31 @@ async function scan(dir: string, filters: { name: string, fn: LicenseFilter }[],
 }
 
 async function main() {
+  const args = process.argv.slice(2);
+  
+  // Handle help and version flags
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log(`check-nc-licenses v0.2.0
+
+Usage: check-nc-licenses [options]
+
+Options:
+  -h, --help          Show this help message
+  -v, --version       Show version number
+  --use <filter>      Use specific filter (default-filter, spdx-filter)
+
+Examples:
+  check-nc-licenses                     # Use all available filters
+  check-nc-licenses --use default-filter  # Use only default filter
+  check-nc-licenses --use spdx-filter     # Use only SPDX filter`);
+    return;
+  }
+  
+  if (args.includes('--version') || args.includes('-v')) {
+    console.log('0.2.0');
+    return;
+  }
+
   const filters = await loadFilters();
   
   if (filters.length === 0) {
