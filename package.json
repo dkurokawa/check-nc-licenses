@@ -1,6 +1,6 @@
 {
   "name": "check-nc-licenses",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Lightweight CLI tool to scan Node.js projects for non-commercial (NC) licenses in dependencies - zero config, instant results",
   "main": "dist/index.js",
   "bin": {

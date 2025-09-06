@@ -8,8 +8,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ログ関連の設定
-const LOG_DIR = path.resolve(process.cwd(), '.nc-license-logs');
-const LOG_FILE = path.join(LOG_DIR, `scan-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
+let LOG_DIR: string | null = null;
+let LOG_FILE: string | null = null;
 let logContent: string[] = [];
 
 const filterArgs = new Set<string>();
@@ -52,14 +52,18 @@ async function scan(dir: string, filters: { name: string, fn: LicenseFilter }[],
       const pkg = path.join(p, 'package.json');
       if (fs.existsSync(pkg)) {
         const j = JSON.parse(fs.readFileSync(pkg, 'utf-8'));
-        logContent.push(`Checking: ${j.name}@${j.version} (${j.license || 'no license'})`);
+        if (LOG_FILE) {
+          logContent.push(`Checking: ${j.name}@${j.version} (${j.license || 'no license'})`);
+        }
         
         for (const { name: fname, fn } of filters) {
           const res = fn(p, j);
           if (res) {
             res.reason += ` (filter: ${fname})`;
             results.push(res);
-            logContent.push(`  ❌ Found NC license: ${res.reason}`);
+            if (LOG_FILE) {
+              logContent.push(`  ❌ Found NC license: ${res.reason}`);
+            }
           }
         }
       }
@@ -70,6 +74,8 @@ async function scan(dir: string, filters: { name: string, fn: LicenseFilter }[],
 }
 
 async function saveLog() {
+  if (!LOG_FILE || !LOG_DIR) return;
+  
   try {
     if (!fs.existsSync(LOG_DIR)) {
       fs.mkdirSync(LOG_DIR, { recursive: true });
@@ -93,7 +99,7 @@ async function main() {
   
   // Handle help and version flags
   if (args.includes('--help') || args.includes('-h')) {
-    console.log(`check-nc-licenses v0.3.0
+    console.log(`check-nc-licenses v0.4.0
 
 Usage: check-nc-licenses [options]
 
@@ -101,21 +107,29 @@ Options:
   -h, --help          Show this help message
   -v, --version       Show version number
   --use <filter>      Use specific filter (default-filter, spdx-filter)
-  --verbose           Show all scanned packages (not just problems)
+  --log               Save detailed scan log to file
 
 Examples:
   check-nc-licenses                     # Use all available filters
   check-nc-licenses --use default-filter  # Use only default filter
-  check-nc-licenses --use spdx-filter     # Use only SPDX filter`);
+  check-nc-licenses --use spdx-filter     # Use only SPDX filter
+  check-nc-licenses --log                # Save scan details to log file`);
     return;
   }
   
   if (args.includes('--version') || args.includes('-v')) {
-    console.log('0.3.0');
+    console.log('0.4.0');
     return;
   }
 
-  const verbose = args.includes('--verbose');
+  const enableLog = args.includes('--log');
+  
+  // ログが有効な場合のみ設定
+  if (enableLog) {
+    LOG_DIR = path.resolve(process.cwd(), '.nc-license-logs');
+    LOG_FILE = path.join(LOG_DIR, `scan-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
+  }
+  
   const filters = await loadFilters();
   
   if (filters.length === 0) {
@@ -123,25 +137,31 @@ Examples:
     process.exit(1);
   }
 
-  logContent.push(`Starting scan with filters: ${filters.map(f => f.name).join(', ')}`);
-  logContent.push('');
+  if (LOG_FILE) {
+    logContent.push(`Starting scan with filters: ${filters.map(f => f.name).join(', ')}`);
+    logContent.push('');
+  }
 
   const results = await scan('node_modules', filters);
   
-  // ログファイルを保存
-  logContent.push('');
-  logContent.push(`Total packages scanned: ${logContent.filter(line => line.startsWith('Checking:')).length}`);
-  logContent.push(`NC licenses found: ${results.length}`);
-  await saveLog();
+  // ログファイルを保存（ログが有効な場合のみ）
+  if (LOG_FILE) {
+    logContent.push('');
+    logContent.push(`Total packages scanned: ${logContent.filter(line => line.startsWith('Checking:')).length}`);
+    logContent.push(`NC licenses found: ${results.length}`);
+    await saveLog();
+  }
   
   if (results.length > 0) {
     console.error('❌ NC-license detected:');
     results.forEach(r => console.error(`- ${r.name}@${r.version} (${r.license}): ${r.reason}`));
-    console.error(`\n📋 Full scan log saved to: ${LOG_FILE}`);
+    if (LOG_FILE) {
+      console.error(`\n📋 Full scan log saved to: ${LOG_FILE}`);
+    }
     process.exit(1);
   }
   
-  if (verbose) {
+  if (LOG_FILE) {
     console.log(`📋 Full scan log saved to: ${LOG_FILE}`);
   }
   
