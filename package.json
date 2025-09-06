@@ -1,10 +1,12 @@
 {
   "name": "check-nc-licenses",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Lightweight CLI tool to scan Node.js projects for non-commercial (NC) licenses in dependencies - zero config, instant results",
   "main": "dist/index.js",
-  "bin": { "check-nc-licenses": "dist/index.js" },
-  "scripts": { 
+  "bin": {
+    "check-nc-licenses": "dist/index.js"
+  },
+  "scripts": {
     "build": "tsc",
     "prebuild": "node dist/index.js",
     "test": "vitest run",
@@ -42,7 +44,7 @@
     "commercial",
     "legal"
   ],
-    "author": {
+  "author": {
     "name": "Daisuke Kurokawa",
     "url": "https://github.com/dkurokawa"
   },
@@ -55,12 +57,13 @@
     "url": "https://github.com/dkurokawa/check-nc-licenses/issues"
   },
   "homepage": "https://github.com/dkurokawa/check-nc-licenses#readme",
-  "devDependencies": { 
-    "typescript": "^5.0.0",
-    "vitest": "^1.0.0",
+  "devDependencies": {
     "@types/node": "^20.0.0",
-    "@vitest/coverage-v8": "^1.0.0",
-    "@vitest/ui": "^1.0.0"
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "dotenv": "^17.2.2",
+    "typescript": "^5.0.0",
+    "vitest": "^3.2.4"
   },
   "type": "module"
 }

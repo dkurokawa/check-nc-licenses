@@ -7,6 +7,11 @@ import { LicenseFilter, LicenseMatchResult } from './types/filter.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// ログ関連の設定
+const LOG_DIR = path.resolve(process.cwd(), '.nc-license-logs');
+const LOG_FILE = path.join(LOG_DIR, `scan-${new Date().toISOString().replace(/[:.]/g, '-')}.log`);
+let logContent: string[] = [];
+
 const filterArgs = new Set<string>();
 const useAll = process.argv.filter(arg => arg.startsWith('--use')).length === 0;
 
@@ -47,11 +52,14 @@ async function scan(dir: string, filters: { name: string, fn: LicenseFilter }[],
       const pkg = path.join(p, 'package.json');
       if (fs.existsSync(pkg)) {
         const j = JSON.parse(fs.readFileSync(pkg, 'utf-8'));
+        logContent.push(`Checking: ${j.name}@${j.version} (${j.license || 'no license'})`);
+        
         for (const { name: fname, fn } of filters) {
           const res = fn(p, j);
           if (res) {
             res.reason += ` (filter: ${fname})`;
             results.push(res);
+            logContent.push(`  ❌ Found NC license: ${res.reason}`);
           }
         }
       }
@@ -61,12 +69,31 @@ async function scan(dir: string, filters: { name: string, fn: LicenseFilter }[],
   return results;
 }
 
+async function saveLog() {
+  try {
+    if (!fs.existsSync(LOG_DIR)) {
+      fs.mkdirSync(LOG_DIR, { recursive: true });
+    }
+    const logHeader = [
+      `NC License Scan Log`,
+      `Date: ${new Date().toISOString()}`,
+      `Command: ${process.argv.join(' ')}`,
+      `Working Directory: ${process.cwd()}`,
+      `=====================================`,
+      ''
+    ];
+    fs.writeFileSync(LOG_FILE, [...logHeader, ...logContent].join('\n'));
+  } catch (error) {
+    console.error('Warning: Failed to save log file:', error);
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2);
   
   // Handle help and version flags
   if (args.includes('--help') || args.includes('-h')) {
-    console.log(`check-nc-licenses v0.2.0
+    console.log(`check-nc-licenses v0.3.0
 
 Usage: check-nc-licenses [options]
 
@@ -74,6 +101,7 @@ Options:
   -h, --help          Show this help message
   -v, --version       Show version number
   --use <filter>      Use specific filter (default-filter, spdx-filter)
+  --verbose           Show all scanned packages (not just problems)
 
 Examples:
   check-nc-licenses                     # Use all available filters
@@ -83,10 +111,11 @@ Examples:
   }
   
   if (args.includes('--version') || args.includes('-v')) {
-    console.log('0.2.0');
+    console.log('0.3.0');
     return;
   }
 
+  const verbose = args.includes('--verbose');
   const filters = await loadFilters();
   
   if (filters.length === 0) {
@@ -94,12 +123,28 @@ Examples:
     process.exit(1);
   }
 
+  logContent.push(`Starting scan with filters: ${filters.map(f => f.name).join(', ')}`);
+  logContent.push('');
+
   const results = await scan('node_modules', filters);
+  
+  // ログファイルを保存
+  logContent.push('');
+  logContent.push(`Total packages scanned: ${logContent.filter(line => line.startsWith('Checking:')).length}`);
+  logContent.push(`NC licenses found: ${results.length}`);
+  await saveLog();
+  
   if (results.length > 0) {
     console.error('❌ NC-license detected:');
     results.forEach(r => console.error(`- ${r.name}@${r.version} (${r.license}): ${r.reason}`));
+    console.error(`\n📋 Full scan log saved to: ${LOG_FILE}`);
     process.exit(1);
   }
+  
+  if (verbose) {
+    console.log(`📋 Full scan log saved to: ${LOG_FILE}`);
+  }
+  
   console.log('✅ No NC-licenses detected.');
 }
 

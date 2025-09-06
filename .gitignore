@@ -151,3 +151,8 @@ dist/
 
 # Development scripts output (keep scripts themselves)
 scripts/*.log
+
+# NC License scan logs
+.nc-license-logs/
+
+CLAUDE.md
