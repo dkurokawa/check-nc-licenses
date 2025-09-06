@@ -1,0 +1,36 @@
+# 各プロジェクトのリリース時にppn-pageの更新をトリガーするワークフロー
+# このファイルを各プロジェクトの.github/workflows/にコピーしてください
+
+name: Notify ppn-page on Release
+
+on:
+  workflow_call:
+    secrets:
+      PPN_PAGE_TRIGGER_TOKEN:
+        required: true
+  release:
+    types: [published]
+  push:
+    tags:
+      - 'v*'
+    paths:
+      - 'package.json'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger ppn-page update
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PPN_PAGE_TRIGGER_TOKEN }}
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: 'dkurokawa',
+              repo: 'ppn-page',
+              event_type: 'project-update',
+              client_payload: {
+                repository: context.repo.repo,
+                version: context.ref.replace('refs/tags/', '')
+              }
+            });
