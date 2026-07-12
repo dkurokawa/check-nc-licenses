@@ -8,9 +8,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "prebuild": "node dist/index.js",
     "test": "vitest run",
-    "pretest": "node dist/index.js",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
@@ -18,12 +16,12 @@
     "test:advanced": "node scripts/advanced-test.js",
     "test:all": "npm run test:patterns && npm run test:advanced",
     "dev": "tsc --watch",
-    "prepublishOnly": "npm run build",
-    "postinstall": "node dist/index.js"
+    "prepublishOnly": "npm run build"
   },
   "files": [
     "dist/**/*",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "engines": {

@@ -1,28 +1,29 @@
 import { LicenseFilter, LicenseMatchResult } from '../types/filter.js';
 
-const NC_KEYWORDS = [
-  'non-commercial', 
-  'noncommercial',
-  'by-nc', 
-  'cc-by-nc',
-  'attribution-noncommercial',
-  'nc'
+// Word-boundary patterns for non-commercial license markers.
+//
+// A previous version matched the bare substring "nc", which produced false
+// positives on any license text that merely contained those two letters
+// (e.g. "Company Inc", "scancode"). Matching whole words instead removes
+// that class of bug and eliminates the need for the previous "inc."
+// special case.
+const NC_PATTERNS: RegExp[] = [
+  // non-commercial / noncommercial / non commercial
+  /\bnon[-\s]?commercial\b/,
+  // by-nc, cc-by-nc, attribution-noncommercial (SPDX-style, hyphen-delimited)
+  /(?:^|[^a-z0-9])by-nc(?:[^a-z0-9]|$)/,
+  /(?:^|[^a-z0-9])cc-by-nc(?:[^a-z0-9]|$)/,
 ];
+
+function matchesNC(license: string): boolean {
+  const normalized = license.toLowerCase();
+  return NC_PATTERNS.some((re) => re.test(normalized));
+}
 
 const filter: LicenseFilter = (pkgPath, pkgJson) => {
   // Check license field
-  const license = (pkgJson.license || '').toLowerCase();
-  if (NC_KEYWORDS.some(k => license.includes(k))) {
-    // Avoid false positives for patterns like "Inc." in license names
-    // Check if the license contains "inc." to avoid matching "nc" in "Inc."
-    if (license.includes('inc.')) {
-      // Check if any matched keyword is just "nc"
-      const matchedKeywords = NC_KEYWORDS.filter(k => license.includes(k));
-      // If only "nc" matches and "inc." is present, skip
-      if (matchedKeywords.length === 1 && matchedKeywords[0] === 'nc') {
-        return null;
-      }
-    }
+  const license = pkgJson.license || '';
+  if (matchesNC(license)) {
     return {
       name: pkgJson.name,
       version: pkgJson.version,
@@ -35,8 +36,7 @@ const filter: LicenseFilter = (pkgPath, pkgJson) => {
   if (Array.isArray(pkgJson.licenses)) {
     for (const licenseObj of pkgJson.licenses) {
       if (licenseObj && typeof licenseObj === 'object' && licenseObj.type) {
-        const licenseType = licenseObj.type.toLowerCase();
-        if (NC_KEYWORDS.some(k => licenseType.includes(k))) {
+        if (matchesNC(licenseObj.type)) {
           return {
             name: pkgJson.name,
             version: pkgJson.version,

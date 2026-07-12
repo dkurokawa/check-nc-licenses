@@ -7,6 +7,20 @@ import { LicenseFilter, LicenseMatchResult } from './types/filter.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Read the version from package.json (npm always ships package.json alongside
+// the published files) so it stays in sync with a single source of truth.
+function getVersion(): string {
+  try {
+    const pkgPath = path.resolve(__dirname, '../package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    return pkg.version || 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+const VERSION = getVersion();
+
 // ログ関連の設定
 let LOG_DIR: string | null = null;
 let LOG_FILE: string | null = null;
@@ -51,7 +65,19 @@ async function scan(dir: string, filters: { name: string, fn: LicenseFilter }[],
     if (stat.isDirectory()) {
       const pkg = path.join(p, 'package.json');
       if (fs.existsSync(pkg)) {
-        const j = JSON.parse(fs.readFileSync(pkg, 'utf-8'));
+        let j: any;
+        try {
+          j = JSON.parse(fs.readFileSync(pkg, 'utf-8'));
+        } catch (error) {
+          // A single malformed package.json must not abort the whole scan.
+          const message = error instanceof Error ? error.message : String(error);
+          console.warn(`⚠️  Skipping unreadable package.json at ${pkg}: ${message}`);
+          if (LOG_FILE) {
+            logContent.push(`  ⚠️ Skipped unreadable package.json: ${pkg} (${message})`);
+          }
+          await scan(p, filters, results);
+          continue;
+        }
         if (LOG_FILE) {
           logContent.push(`Checking: ${j.name}@${j.version} (${j.license || 'no license'})`);
         }
@@ -99,7 +125,7 @@ async function main() {
   
   // Handle help and version flags
   if (args.includes('--help') || args.includes('-h')) {
-    console.log(`check-nc-licenses v0.4.0
+    console.log(`check-nc-licenses v${VERSION}
 
 Usage: check-nc-licenses [options]
 
@@ -118,7 +144,7 @@ Examples:
   }
   
   if (args.includes('--version') || args.includes('-v')) {
-    console.log('0.4.0');
+    console.log(VERSION);
     return;
   }
 
