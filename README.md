@@ -1,68 +1,53 @@
 # check-nc-licenses
 
-🔍 **Lightweight and fast** CLI tool to scan your Node.js project for non-commercial (NC) licenses in dependencies.
+A small CLI that scans a Node.js project's installed dependencies for non-commercial (NC) licenses, so they don't slip into a commercial build. Zero configuration — it reads `node_modules` and reports any NC-restricted packages.
 
-✨ **Zero configuration** - Works out of the box  
-⚡ **Lightning fast** - Specialized for NC license detection  
-🎯 **Purpose-built** - Focused on commercial project compliance  
-🔧 **Easy integration** - Automatic build pipeline integration  
-
+[![CI](https://github.com/dkurokawa/check-nc-licenses/actions/workflows/ci.yml/badge.svg)](https://github.com/dkurokawa/check-nc-licenses/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/check-nc-licenses.svg)](https://www.npmjs.com/package/check-nc-licenses)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-blue.svg)](https://www.typescriptlang.org/)
 
 ## Installation
 
-**Global installation** (recommended):
+Global install:
+
 ```bash
 npm install -g check-nc-licenses
 ```
 
-**Or use instantly without installing**:
+Or run without installing:
+
 ```bash
 npx check-nc-licenses
 ```
 
-**That's it!** No configuration files needed. 🚀
+No configuration files are required.
 
 ## Usage
 
-### Basic Usage
-
-**One command. That's all.** Scan your project's `node_modules` for non-commercial licenses:
+Scan the current project's `node_modules`:
 
 ```bash
 check-nc-licenses
 ```
 
-✅ **Zero setup required** - Works immediately on any Node.js project  
-⚡ **Instant results** - Fast scanning of all dependencies  
-🎯 **Smart detection** - Finds NC licenses others miss  
+It exits `0` when no NC license is found and `1` when one is detected (or an unexpected error occurs), which makes it usable as a CI gate.
 
-### Automatic Integration
+### Run it automatically
 
-**Set it and forget it.** Add to your `package.json` to run automatically:
+Wire it into a script that runs before you build, test, or release:
 
 ```json
 {
   "scripts": {
-    "prebuild": "check-nc-licenses",    // Run before build
-    "pretest": "check-nc-licenses",     // Run before tests
-    "postinstall": "check-nc-licenses"  // Run after npm install
+    "prebuild": "check-nc-licenses",
+    "prerelease": "check-nc-licenses"
   }
 }
 ```
 
-**For published packages, use the installed command:**
-```json
-{
-  "scripts": {
-    "prebuild": "check-nc-licenses"
-  }
-}
-```
+For local/dev use without a global install, call it through `npx`:
 
-**For development/local use:**
 ```json
 {
   "scripts": {
@@ -71,97 +56,64 @@ check-nc-licenses
 }
 ```
 
-Now the tool runs automatically:
-```bash
-npm run build  # ✅ Checks licenses first, then builds
-npm test       # ✅ Checks licenses first, then tests  
-npm install    # ✅ Checks licenses after installing dependencies
-```
+> Note: avoid wiring this into a published library's `postinstall`. That would run on every downstream install and can fail a consumer's `npm install`. Prefer `prebuild`/`prerelease` or a dedicated CI step.
 
-### Manual Usage
+### Filters
 
 ```bash
-# Use specific filter
-check-nc-licenses --use default-filter    # Keyword-based detection (default)
-check-nc-licenses --use spdx-filter       # SPDX identifier detection
+# Keyword-based detection (default)
+check-nc-licenses --use default-filter
 
-# Show help
+# SPDX identifier detection
+check-nc-licenses --use spdx-filter
+
+# Save a detailed scan log to ./.nc-license-logs/
+check-nc-licenses --log
+
+# Help
 check-nc-licenses --help
 ```
 
-## What It Detects
+When no `--use` flag is given, all filters run.
 
-This tool identifies packages with non-commercial license restrictions, including:
+## What it detects
 
-- **Creative Commons NC licenses**: CC-BY-NC, CC-BY-NC-SA, etc.
-- **Explicit non-commercial clauses**: "non-commercial use only", "academic use only"
-- **Research/educational restrictions**: "research purposes only", "educational use"
-- **Personal use limitations**: "personal use only"
+- **Creative Commons NC licenses**: `CC-BY-NC`, `CC-BY-NC-SA`, etc. (SPDX identifiers and common text forms)
+- **Non-commercial wording**: license fields containing `non-commercial` / `noncommercial`
 
-## Exit Codes
+Detection is word-boundary based, so names like `Company Inc` or `scancode` are not mistaken for NC licenses.
 
-- `0`: No non-commercial licenses found
-- `1`: Non-commercial licenses detected or error occurred
-
-## Example Output
+## Example output
 
 ```bash
 $ check-nc-licenses
-
 ✅ No NC-licenses detected.
 ```
 
 ```bash
 $ check-nc-licenses
-
 ❌ NC-license detected:
-- some-package@1.0.0 (CC-BY-NC-4.0): Non-commercial Creative Commons license
+- some-package@1.0.0 (CC-BY-NC-4.0): license field contains NC keyword (filter: default-filter)
 ```
-
-## Why Use This Tool?
-
-Non-commercial licenses can restrict how you use, distribute, or monetize your software. This **lightweight and focused** tool helps you:
-
-- **Ensure compliance** with license requirements
-- **Avoid legal issues** in commercial projects  
-- **Audit dependencies** before releases
-- **Integrate into CI/CD** pipelines **effortlessly**
-- **Save time** with instant, accurate detection
-- **Stay lightweight** - minimal dependencies, maximum performance
 
 ## Integration
 
-### CI/CD Pipeline
-
-Add to your GitHub Actions, Jenkins, or other CI systems:
+### GitHub Actions
 
 ```yaml
 - name: Check for NC licenses
   run: npx check-nc-licenses
 ```
 
-### package.json Scripts
-
-```json
-{
-  "scripts": {
-    "license-check": "check-nc-licenses",
-    "prerelease": "npm run license-check"
-  }
-}
-```
-
 ## Documentation
 
-For developers and advanced usage:
-
-- **[Development Guide](https://github.com/dkurokawa/check-nc-licenses/blob/main/docs/DEVELOPMENT.md)**
-- **[API Reference](https://github.com/dkurokawa/check-nc-licenses/blob/main/docs/API.md)**
-- **[Testing Guide](https://github.com/dkurokawa/check-nc-licenses/blob/main/docs/TESTING.md)**
+- [Development Guide](https://github.com/dkurokawa/check-nc-licenses/blob/main/docs/DEVELOPMENT.md)
+- [API Reference](https://github.com/dkurokawa/check-nc-licenses/blob/main/docs/API.md)
+- [Testing Guide](https://github.com/dkurokawa/check-nc-licenses/blob/main/docs/TESTING.md)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome — please open an issue or pull request.
 
 ## License
 
